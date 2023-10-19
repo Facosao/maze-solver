@@ -39,8 +39,8 @@ def iniciar() -> No:
     else:
         novo_no = No(resposta.get("pos_atual"), -1)
         novo_no.fetch = True
-        novo_no.inicio = resposta.get("inicio")
-        novo_no.fim = resposta.get("fim")
+        novo_no.inicio = True if resposta.get("inicio") == "true" else False
+        novo_no.fim = True if resposta.get("fim") == "true" else False
         novo_no.explorado = True
 
         for item in resposta.get("movimentos"):
@@ -62,14 +62,31 @@ class No:
         self.inicio: bool = False
         self.fim: bool = False
 
+nos: dict[int, No] = {}
 
-def fetch_no(anterior: int, resposta: dict) -> None:
+def fetch_no(no: No) -> None:
     # Fazer chamada request nesta função se mover no labirinto
-    pass
+    dados = dict(
+        id=ID,
+        labirinto=MAZE,
+        nova_posicao=no.id
+    )
+    resposta = requests.post(API + "/movimentar", json=dados, verify=False)
+
+    if resposta.status_code != 200:
+        print(resposta.text)
+        raise RuntimeError()
+    else:
+        no.fetch = True
+        no.inicio = True if resposta.get("inicio") == "true" else False
+        no.fim = True if resposta.get("fim") == "true" else False
+        
+        for item in resposta.get("movimentos"):
+            no.adjacencias.append(int(item))
 
 
-def BFS():
-    nos: dict[int, No] = {}
+def BFS() -> No:
+    global nos
     fila: list[No] = []
     no_raiz = iniciar()
     nos.update({no_raiz.id: no_raiz})
@@ -91,6 +108,20 @@ def BFS():
                 no_adj = nos.get(adj)
                 no_adj.explorado = True
                 fila.append(no_adj.id)
+
+no_final = BFS()
+lista_final: list[int] = []
+
+while True:
+    if no_final.anterior != (-1):
+        lista_final.append(no_final.id)
+        no_final = nos.get(no_final.anterior)
+    else:
+        lista_final.append(no_final.id)
+        break
+
+lista_final.reverse()
+print(lista_final)
 
 
 """
