@@ -28,8 +28,24 @@ MAZE = "sample_maze"
 
 # data = requests.get(API + "/labirintos", verify=False)
 
+class No:
+    def __init__(self, id: int, anterior: No) -> None:
+        self.fetch = False
+        self.id = id
+        self.anterior = anterior
+        self.explorado = False
+        self.adjacencias: list[int] = []
+        self.inicio: bool = False
+        self.fim: bool = False
 
-def iniciar() -> No:
+    def __str__(self) -> str:
+        return str(self.adjacencias)
+
+nos: dict[int, No] = {}
+
+
+def iniciar() -> int:
+    global nos
     dados = dict(id=ID, labirinto=MAZE)
     resposta = requests.post(API + "/iniciar", json=dados, verify=False)
 
@@ -37,32 +53,70 @@ def iniciar() -> No:
         print(resposta.text)
         raise RuntimeError()
     else:
+        resposta = resposta.json()
         novo_no = No(resposta.get("pos_atual"), -1)
         novo_no.fetch = True
-        novo_no.inicio = True if resposta.get("inicio") == "true" else False
-        novo_no.fim = True if resposta.get("fim") == "true" else False
+        novo_no.inicio = resposta.get("inicio")
+        novo_no.fim = resposta.get("final")
         novo_no.explorado = True
 
         for item in resposta.get("movimentos"):
-            novo_no.adjacencias.append(int(item))
+            novo_no.adjacencias.append(item)
 
-        return novo_no
+        nos.update({novo_no.id: novo_no})
 
+        return novo_no.id
 
-# print(iniciar())
+def movimentar(indice: int, anterior: int):
+    dados = dict(
+        id=ID,
+        labirinto=MAZE,
+        nova_posicao=indice
+    )
 
+    resposta = requests.post(API + "/movimentar", json=dados, verify=False)
 
-class No:
-    def __init__(self, id: int, anterior: No) -> None:
-        self.fetch = False
-        self.id = id
-        self.anterior = anterior
-        self.explorado = False
-        self.adjacencias: list[No] = []
-        self.inicio: bool = False
-        self.fim: bool = False
+    if resposta.status_code != 200:
+        print(resposta.text)
+        raise RuntimeError()
+    else:
+        resposta: dict = resposta.json()
+        
+        if nos.get(resposta.get("pos_atual")) is not None:
+            return
+        
+        novo_no = No(int(resposta.get("pos_atual")), anterior)
+        novo_no.inicio = resposta.get("inicio")
+        novo_no.fim = resposta.get("final")
 
-nos: dict[int, No] = {}
+        for item in resposta.get("movimentos"):
+            novo_no.adjacencias.append(item)
+
+        nos.update({novo_no.id: novo_no})
+
+def DFS(indice: int, anterior: int, inicio=False):
+    global nos
+    
+    if inicio is False:
+        # movimentar para este nó
+        movimentar(indice, anterior)
+
+    no = nos.get(indice)
+    no.explorado = True
+
+    # explorar adjacências
+    for adj in no.adjacencias:
+        no_adj = nos.get(adj)
+
+        if no_adj is None:
+            DFS(adj, indice)
+        else:
+            if no_adj.explorado is False:
+                DFS(adj, indice)
+
+    if no.inicio is False:
+        # voltar ao nó anterior
+        movimentar(no.anterior, indice)
 
 def fetch_no(no: No) -> None:
     # Fazer chamada request nesta função se mover no labirinto
@@ -77,6 +131,7 @@ def fetch_no(no: No) -> None:
         print(resposta.text)
         raise RuntimeError()
     else:
+        resposta = resposta.json()
         no.fetch = True
         no.inicio = True if resposta.get("inicio") == "true" else False
         no.fim = True if resposta.get("fim") == "true" else False
@@ -94,9 +149,11 @@ def BFS() -> No:
 
     while len(fila) > 0:
         no = nos.get(fila.pop(0))
-
+        print("id =", no.id, end="")
         if no.fetch is False:
-            fetch_no()
+            print("--- fetch ---", end="")
+            fetch_no(no)
+        print(" ")
 
         if no.fim is True:
             return no
@@ -104,11 +161,14 @@ def BFS() -> No:
         for adj in no.adjacencias:
             if nos.get(adj) is None:
                 nos.update({adj: No(adj, no.id)})
-            else:
-                no_adj = nos.get(adj)
+
+            no_adj = nos.get(adj)
+            
+            if no_adj.explorado is False:
                 no_adj.explorado = True
                 fila.append(no_adj.id)
 
+"""
 no_final = BFS()
 lista_final: list[int] = []
 
@@ -122,6 +182,33 @@ while True:
 
 lista_final.reverse()
 print(lista_final)
+"""
+
+indice_inicial = iniciar()
+DFS(indice_inicial, (-1), inicio=True)
+
+for key in nos.keys():
+    print("---", key, "---")
+    print(nos.get(key))
+
+
+"""
+#TODO: Erro: Não é possível usar o BFS puro para explorar
+o labirinto e achar o menor caminho simultâneamente.
+
+EX: O algoritmo se movimenta para preencher as informações do
+nó atual, sem levar em consideração as adjacências do nó anterior. 
+
+No "sample_maze", a sequência de movimentos que o algoritmo
+faria seria 8 -> 4 -> 5 -> 6, porém, o número 6 não faz parte da
+lista de adjacências do nó #5.
+
+Solução: Usar DFS para explorar os nós do labirinto, observando que
+o algoritmo deve voltar para o nó anterior, ao final de cada caminho explorado.
+
+Usar BFS (ou outro algoritmo) para navegar livremente pelos nós na memória
+e achar o menor caminho possível.
+"""
 
 
 """
@@ -140,7 +227,7 @@ Solução do sample_maze
 8, 4, 5, 6, 10, 9
 
 9, 3, 7
-
+8, 4, 5, 6, 10, 9, 3
 8 -> 4, 5, 6, 10
 4 -> 5, 8 ,9
 5 -> 3, 4, 8
