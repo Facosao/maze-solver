@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import requests
 import urllib3
+import time
 
 urllib3.disable_warnings()  # Certificado SSL inválido
 
@@ -25,6 +26,19 @@ POST exemplo
 API = "https://gtm.delary.dev"
 ID = "grupo_i"
 MAZE = "sample_maze"
+api_calls = 0
+
+
+class Timer:
+    def __init__(self) -> None:
+        self.tempo_total = 0
+        self.tempo_aux = 0
+
+    def iniciar(self):
+        self.tempo_aux = time.perf_counter()
+
+    def parar(self):
+        self.tempo_total += time.perf_counter() - self.tempo_aux
 
 
 class No:
@@ -37,10 +51,11 @@ class No:
         self.final: bool = False
 
     def __str__(self) -> str:
-        return str(self.adjacencias)
+        return str(self.id) + ": " + str(self.adjacencias)
 
 
 nos: dict[int, No] = {}
+timer_api = Timer()
 
 
 def gravar_no(resposta, anterior: int) -> int:
@@ -68,24 +83,62 @@ def gravar_no(resposta, anterior: int) -> int:
 
 
 def iniciar() -> int:
-    global nos
+    global api_calls
+    global timer_api
     dados = dict(id=ID, labirinto=MAZE)
+
+    timer_api.iniciar()
     resposta = requests.post(API + "/iniciar", json=dados, verify=False)
+    timer_api.parar()
+    api_calls += 1
 
     return gravar_no(resposta, (-1))
 
 
 def movimentar(indice: int, anterior: int) -> None:
-    global nos
+    global api_calls
+    global timer_api
     dados = dict(id=ID, labirinto=MAZE, nova_posicao=indice)
 
+    timer_api.iniciar()
     resposta = requests.post(API + "/movimentar", json=dados, verify=False)
+    timer_api.parar()
+    api_calls += 1
 
     gravar_no(resposta, anterior)
 
 
+def validar_caminho(caminho: list[int]) -> None:
+    global api_calls
+    global timer_api
+
+    dados = dict(id=ID, labirinto=MAZE, todos_movimentos=caminho)
+
+    timer_api.iniciar()
+    resposta = requests.post(API + "/validar_caminho", json=dados, verify=False)
+    timer_api.parar()
+    api_calls += 1
+
+    if resposta.status_code != 200:
+        print(resposta.status_code)
+        print(resposta.text)
+        raise RuntimeError()
+    else:
+        resposta: dict = resposta.json()
+        print("--- Qtd. movimentos:", resposta.get("quantidade_movimentos"))
+        print("--- Caminho valido:", resposta.get("caminho_valido"))
+
+
+def DFS_status(indice: int) -> None:
+    global api_calls
+
+    print("\r                                  ", end="")
+    print("\r--- API Calls: %d | pos_atual: %d" % (api_calls, indice), end="")
+
+
 def DFS(indice: int, anterior: int, inicio=False):
     global nos
+    DFS_status(indice)
 
     if inicio is False:
         # movimentar para este nó
@@ -107,6 +160,8 @@ def DFS(indice: int, anterior: int, inicio=False):
     if no.inicio is False:
         # voltar ao nó anterior
         movimentar(no.anterior, indice)
+
+    DFS_status(indice)
 
 
 def restaurar_nos() -> None:
@@ -157,30 +212,19 @@ def encontrar_caminho(final: int) -> list[int]:
     return caminho
 
 
-def validar_caminho(caminho: list[int]) -> bool:
-    dados = dict(id=ID, labirinto=MAZE, todos_movimentos=caminho)
-
-    resposta = requests.post(API + "/validar_caminho", json=dados, verify=False)
-
-    if resposta.status_code != 200:
-        print(resposta.status_code)
-        print(resposta.text)
-        raise RuntimeError()
-    else:
-        resposta: dict = resposta.json()
-        print("Qtd. movimentos:", resposta.get("quantidade_movimentos"))
-        return resposta.get("caminho_valido")
-
-
 if __name__ == "__main__":
+    timer_main = Timer()
+    timer_main.iniciar()
+
     print('1 - Fazendo chamada inicial (Labirinto: "', MAZE, '")', sep="")
     indice_inicial = iniciar()
 
     print("2 - Explorando o labirinto (API) com o DFS")
     DFS(indice_inicial, (-1), inicio=True)
+    print("")  # Nova linha após chamadas recursivas
 
-    for key in nos.keys():
-        print(key, ": ", nos.get(key), sep="")
+    for value in nos.values():
+        print("---", value)
 
     print("3 - Resetando o estado dos nos")
     restaurar_nos()
@@ -190,11 +234,19 @@ if __name__ == "__main__":
 
     print("5 - Encontrando o menor caminho")
     menor_caminho = encontrar_caminho(indice_final)
-    print(menor_caminho)
+    print("---", menor_caminho)
 
     print("6 - Validando o menor caminho encontrado")
-    resultado = validar_caminho(menor_caminho)
-    print("Caminho valido:", resultado)
+    validar_caminho(menor_caminho)
+
+    timer_main.parar()
+
+    print("7 - Estatisticas finais")
+    print("--- API Calls:", api_calls)
+    print("--- Tempo total do programa   : %.3f segundos" % timer_main.tempo_total)
+    print("--- Tempo total das API Calls : %.3f segundos" % timer_api.tempo_total)
+    proporcao = (timer_api.tempo_total * 100) / timer_main.tempo_total
+    print("--- (%.2f%% do total do programa)" % proporcao)
 
 """
 Não é possível usar o BFS puro para explorar
