@@ -41,11 +41,16 @@ impl API {
 
         match maze {
             Some(id) => maze_id = id,
-            None => maze_id = "maze-sample",
+            None => maze_id = "medium-maze",
         }
-        
+
+        let novo_client = reqwest::blocking::ClientBuilder::new()
+            .danger_accept_invalid_certs(true)
+            .build()
+            .unwrap();
+
         API{
-            client: Client::new(),
+            client: novo_client,
             _n_calls: 0,
             api: address.to_string(),
             maze: maze_id.to_string(),
@@ -94,15 +99,19 @@ impl API {
     }
 
     pub fn movimentar(&self, vertices: &mut HashMap<i32, Vertice>, indice: i32, anterior: i32) -> Option<i32> {
-        let dados = json!({
-            "id": ID,
-            "labirinto:": self.maze,
-            "nova_posicao": indice
-        });
+        //let dados = json!({
+        //    "id": ID,
+        //    "labirinto:": self.maze,
+        //    "nova_posicao": indice
+        //});
 
         let response = self.client
             .post(format!("{}/movimentar", self.api))
-            .json(&dados)
+            .json(&json!({
+                "id": ID,
+                "labirinto:": self.maze,
+                "nova_posicao": indice
+            }))
             .send()
             .unwrap();
 
