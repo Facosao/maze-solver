@@ -6,6 +6,10 @@ import time
 
 urllib3.disable_warnings()  # Certificado SSL inválido
 
+import sys
+
+sys.setrecursionlimit(10000)
+
 """
 GET exemplo
 >>> import requests
@@ -25,7 +29,7 @@ POST exemplo
 
 API = "https://gtm.delary.dev"
 ID = "grupo_i"
-MAZE = "sample_maze"
+MAZE = "medium-maze"
 api_calls = 0
 
 
@@ -132,7 +136,7 @@ def validar_caminho(caminho: list[int]) -> None:
 def DFS_status(indice: int) -> None:
     global api_calls
 
-    print("\r                                  ", end="")
+    print("\r                                                       ", end="")
     print("\r--- API Calls: %d | pos_atual: %d" % (api_calls, indice), end="")
 
 
@@ -216,6 +220,7 @@ if __name__ == "__main__":
     timer_main = Timer()
     timer_main.iniciar()
 
+    print("maze-solver (Python)")
     print('1 - Fazendo chamada inicial (Labirinto: "', MAZE, '")', sep="")
     indice_inicial = iniciar()
 
