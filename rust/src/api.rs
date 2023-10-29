@@ -4,7 +4,9 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use reqwest::{self, blocking::Client, blocking::Response};
+
 use crate::vertice::Vertice;
+use crate::timer::Timer;
 
 const ID: &'static str = "grupo_i";
 
@@ -24,9 +26,10 @@ struct RValidarCaminho {
 
 pub struct API {
     client: Client,
-    pub _n_calls: i32,
+    pub n_calls: i32,
     api: String,
     pub maze: String,
+    pub timer: Timer
 }
 
 impl API {
@@ -51,9 +54,10 @@ impl API {
 
         API{
             client: novo_client,
-            _n_calls: 0,
+            n_calls: 0,
             api: address.to_string(),
             maze: maze_id.to_string(),
+            timer: Timer::novo()
         }
     }
 
@@ -83,11 +87,13 @@ impl API {
         }
     }
 
-    pub fn iniciar(&self, vertices: &mut HashMap<i32, Vertice>) -> Option<i32> {
+    pub fn iniciar(&mut self, vertices: &mut HashMap<i32, Vertice>) -> Option<i32> {
         let dados = json!({
             "id": ID,
             "labirinto": self.maze
         });
+
+        self.timer.iniciar();
 
         let response = self.client
             .post(format!("{}/iniciar", self.api))
@@ -95,41 +101,51 @@ impl API {
             .send()
             .unwrap();
 
+        self.timer.parar();
+        self.n_calls += 1;
+
         return self.gravar_no(vertices, response, -1);
     }
 
-    pub fn movimentar(&self, vertices: &mut HashMap<i32, Vertice>, indice: i32, anterior: i32) -> Option<i32> {
-        //let dados = json!({
-        //    "id": ID,
-        //    "labirinto:": self.maze,
-        //    "nova_posicao": indice
-        //});
+    pub fn movimentar(&mut self, vertices: &mut HashMap<i32, Vertice>, indice: i32, anterior: i32) -> Option<i32> {
+        let dados = json!({
+            "id": ID,
+            "labirinto": self.maze,
+            "nova_posicao": indice
+        });
+
+        //println!("{}", serde_json::to_string_pretty(&dados).unwrap());
+        self.timer.iniciar();
 
         let response = self.client
             .post(format!("{}/movimentar", self.api))
-            .json(&json!({
-                "id": ID,
-                "labirinto:": self.maze,
-                "nova_posicao": indice
-            }))
+            .json(&dados)
             .send()
             .unwrap();
+
+        self.timer.parar();
+        self.n_calls += 1;
 
         return self.gravar_no(vertices, response, anterior);
     }
 
-    pub fn validar_caminho(&self, caminho: Vec<i32>) {
+    pub fn validar_caminho(&mut self, caminho: Vec<i32>) {
         let dados = json!({
             "id": ID,
             "labirinto": self.maze,
             "todos_movimentos": caminho
         });
 
+        self.timer.iniciar();
+
         let response = self.client
             .post(format!("{}/validar_caminho", self.api))
             .json(&dados)
             .send()
             .unwrap();
+
+        self.timer.parar();
+        self.n_calls += 1;
 
         if response.status().as_u16() != 200 {
             println!("Erro: {:?}", response.status().as_u16());

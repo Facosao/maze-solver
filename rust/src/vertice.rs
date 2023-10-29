@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub struct Vertice {
     pub id: i32,
     pub anterior: i32,
