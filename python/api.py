@@ -38,12 +38,13 @@ class API:
         self, vertices: dict[int, Vertice], resp: Response, anterior: int
     ) -> int | None:
         if resp.status_code != 200:
-            print("Erro:", resp.status_code)
+            print("\nErro:", resp.status_code)
             print(resp.text)
             raise RuntimeError("Erro durante a gravacao do no!")
         else:
             resposta: RMovimentar = resp.json()
 
+            # vertices[resposta["pos_atual"]] shorter verison!!!
             if vertices.get(resposta.get("pos_atual")) is not None:
                 return
 
@@ -58,7 +59,7 @@ class API:
 
             return novo_vertice.id
 
-    def iniciar(self, vertices: dict[int, Vertice]) -> int | None:
+    def iniciar(self, vertices: dict[int, Vertice]) -> int:
         dados = dict(id=ID, labirinto=self.maze)
 
         self.timer.iniciar()
@@ -66,12 +67,15 @@ class API:
         self.timer.parar()
         self.n_calls += 1
 
-        return self.gravar_no(vertices, resposta, (-1))
+        if (outval := self.gravar_no(vertices, resposta, (-1))) is not None:
+            return outval
+        else:
+            raise RuntimeError("Endpoint /iniciar não retornou um no valido!")
 
     def movimentar(
         self, vertices: dict[int, Vertice], indice: int, anterior: int
     ) -> int | None:
-        dados = dict(id=ID, labirinto=self.url, nova_posicao=indice)
+        dados = dict(id=ID, labirinto=self.maze, nova_posicao=indice)
 
         self.timer.iniciar()
         resposta = requests.post(self.url + "/movimentar", json=dados, verify=False)

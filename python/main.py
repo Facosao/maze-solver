@@ -7,20 +7,24 @@ if __name__ == "__main__":
 
     print("maze-solver (Python)")
 
-    while (i := 0) < len(sys.argv) - 1:
+    i = 0
+    while i < len(sys.argv):
         match sys.argv[i]:
             case "--url":
                 address = sys.argv[i + 1]
             case "--maze":
                 maze = sys.argv[i + 1]
             case "--help":
-                print("Usage: solver.py [OPTION] [ARG]\n")
-                print(" [OPTION]  [ARG]")
-                print("   --url   Specify a custom URL for the API Calls.")
+                print("Usage: main.py [OPTION] [ARG]\n")
+                print(" [OPTION]  [OPTION ARG]")
+                print(" --url     Specify a custom URL for the API Calls.")
                 print("           Default URL: https://gtm.delary.dev")
-                print("   --maze  Specify a custom maze for the program.")
+                print("")
+                print(" --maze    Specify a custom maze for the program.")
                 print('           Default maze: "maze-sample"')
-                print("   --help  Displays this help text.")
+                print("")
+                print(" --help    Displays this help text. (No args)")
+                print("")
                 quit()
 
         i += 1

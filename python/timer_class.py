@@ -4,7 +4,7 @@ import time
 class Timer:
     def __init__(self) -> None:
         self.tempo_total: float = 0
-        self.tempo_aux: float = 0
+        self.tempo_aux: float = time.perf_counter()
 
     def iniciar(self):
         self.tempo_aux = time.perf_counter()
