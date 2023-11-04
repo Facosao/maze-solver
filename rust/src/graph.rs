@@ -4,12 +4,16 @@ use crate::vertice::Vertice;
 use crate::api::API;
 
 pub struct Graph {
-    pub vertices: HashMap<i32, Vertice>
+    pub vertices: HashMap<i32, Vertice>,
+    pub indice_final: Option<i32>
 }
 
 impl Graph {
     pub fn novo() -> Self {
-        Graph { vertices: HashMap::new() }
+        Graph {
+            vertices: HashMap::new(),
+            indice_final: None
+        }
     }
 
     fn dfs_status(api: &API, indice: i32) {
@@ -61,6 +65,10 @@ impl Graph {
     }
 
     pub fn dfs_recursivo(&mut self, api: &mut API, indice: i32, anterior: i32, inicio: bool) {
+        if self.indice_final.is_some() {
+            return;
+        }
+        
         Self::dfs_status(api, indice);
 
         if inicio == false {
@@ -68,9 +76,16 @@ impl Graph {
         }
 
         self.vertices.get_mut(&indice).unwrap().explorado = true;
-        let vec_adj = self.vertices.get(&indice).unwrap().adjacencias.clone();
+        //let vec_adj = self.vertices.get(&indice).unwrap().adjacencias.clone();
 
-        for adj in vec_adj.iter() {
+        let no = self.vertices[&indice].clone();
+
+        if no.fim == true {
+            self.indice_final = Some(indice);
+            return;
+        }
+
+        for adj in no.adjacencias.iter() {
             match self.vertices.get_mut(adj) {
                 None => {
                     self.dfs_recursivo(api, *adj, indice, false);
@@ -86,7 +101,7 @@ impl Graph {
 
         let no = self.vertices.get(&indice).unwrap().clone();
 
-        if no.inicio == false {
+        if (no.inicio == false) && (self.indice_final.is_none()) {
             api.movimentar(&mut self.vertices, no.anterior, indice);
         }
 

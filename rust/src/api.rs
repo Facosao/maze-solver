@@ -33,18 +33,18 @@ pub struct API {
 }
 
 impl API {
-    pub fn novo(api: Option<&str>, maze: Option<&str>) -> Self {
-        let address: &str;
-        let maze_id: &str;
+    pub fn novo(api: Option<String>, maze: Option<String>) -> Self {
+        let address: String;
+        let maze_id: String;
 
         match api {
             Some(url) => address = url,
-            None => address = "https://gtm.delary.dev",
+            None => address = "https://gtm.delary.dev".to_string(),
         }
 
         match maze {
             Some(id) => maze_id = id,
-            None => maze_id = "medium-maze",
+            None => maze_id = "maze-sample".to_string(),
         }
 
         let novo_client = reqwest::blocking::ClientBuilder::new()
@@ -63,7 +63,7 @@ impl API {
 
     fn gravar_no(&self, vertices: &mut HashMap<i32, Vertice>, resp: Response, anterior: i32) -> Option<i32> {
         if resp.status().as_u16() != 200 {
-            println!("Erro: {:?}", resp.status().as_u16());
+            println!("\nErro: {:?}", resp.status().as_u16());
             println!("{:?}", resp.text());
             panic!("Erro durante a gravacao do no!");
         } else {
@@ -148,7 +148,7 @@ impl API {
         self.n_calls += 1;
 
         if response.status().as_u16() != 200 {
-            println!("Erro: {:?}", response.status().as_u16());
+            println!("\nErro: {:?}", response.status().as_u16());
             println!("{:?}", response.text());
             panic!("Erro durante a validacao do caminho!");
         } else {

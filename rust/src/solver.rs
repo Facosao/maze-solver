@@ -2,13 +2,12 @@ use crate::api::API;
 use crate::graph::Graph;
 use crate::timer::Timer;
 
-pub fn solver(address: Option<&str>, maze: Option<&str>) {
+pub fn solver(address: Option<String>, maze: Option<String>) {
     let mut timer = Timer::novo();
     
     let mut api = API::novo(address, maze);
     let mut graph = Graph::novo();
     
-    println!("maze-solver (Rust)");
     println!("1 - Fazendo chamada inicial (Labirinto: {})", api.maze);
     let indice_inicial = api.iniciar(&mut graph.vertices).unwrap();
 
@@ -20,11 +19,13 @@ pub fn solver(address: Option<&str>, maze: Option<&str>) {
         println!("--- {}: {:?}", value.id, value.adjacencias);
     }
 
-    println!("3 - Resetando o estado dos nos");
-    graph.restaurar_nos();
+    //println!("3 - Resetando o estado dos nos");
+    //graph.restaurar_nos();
 
-    println!("4 - Explorando o labirinto (RAM) com o BFS");
-    let indice_final = graph.bfs(indice_inicial);
+    //println!("4 - Explorando o labirinto (RAM) com o BFS");
+    //let indice_final = graph.bfs(indice_inicial);
+
+    let indice_final = graph.indice_final.unwrap();
 
     println!("5 - Encontrando o menor caminho");
     let menor_caminho = graph.encontrar_caminho(indice_final);
