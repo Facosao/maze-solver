@@ -82,7 +82,7 @@ def BFS(nodes: list[Node], root: Node):
 abort = False
 
 
-def DFS(nodes: list[Node], v: Node, previous: Node | None, start=False):
+def DFS(nodes: list[Node], v: Node, previous: Node | None, depth: int, start=False):
     global abort
     if abort is True:
         return
@@ -98,13 +98,32 @@ def DFS(nodes: list[Node], v: Node, previous: Node | None, start=False):
         abort = True
         return
 
-    for adj in v.adjacent:
-        if adj.explored is False:
-            DFS(nodes, adj, v)
+    if depth > 0:
+        for adj in v.adjacent:
+            if adj.explored is False:
+                DFS(nodes, adj, v, depth - 1)
 
     if previous is not None and abort is False:
         print("V", previous.id)
 
 
+def IDDFS(nodes: list[Node], v: Node):
+    global abort
+    i = 0
+
+    while True:
+        DFS(nodes, v, None, i, start=True)
+        print("-----", i)
+
+        if abort is True:
+            break
+        else:
+            for node in nodes:
+                node.explored = False
+
+            i += 1
+
+
 # BFS(q, q[1])
-DFS(q, q[1], None, start=True)
+# DFS(q, q[1], None, start=True)
+IDDFS(q, q[1])
