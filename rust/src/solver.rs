@@ -1,42 +1,56 @@
 use crate::api::API;
 use crate::graph::Graph;
 use crate::timer::Timer;
+use crate::strategy::Strategy;
 
-pub fn solver(address: Option<String>, maze: Option<String>) {
+pub fn solver(address: Option<String>, maze: Option<String>, strat: Strategy) {
     let mut timer = Timer::novo();
-    
     let mut api = API::novo(address, maze);
     let mut graph = Graph::novo();
     
-    println!("1 - Fazendo chamada inicial (Labirinto: {})", api.maze);
+    println!("1 - Fazendo chamada inicial (URL: {} | Labirinto: {} | Modo: {:?})", api.api, api.maze, strat);
     let indice_inicial = api.iniciar(&mut graph.vertices).unwrap();
 
-    println!("2 - Explorando o labirinto (API) com o DFS");
-    graph.dfs_recursivo(&mut api, indice_inicial, -1, true);    
-    println!(""); // Nova linha após chamadas recursivas
+    let indice_final: i32 = match strat {
+        Strategy::BFS => {
+            println!("2.1 Explorando todo o labirinto com o DFS");
+            graph.dfs_total(&mut api, indice_inicial, -1, true); 
+            println!(""); // Nova linha após chamadas recursivas
 
-    for value in graph.vertices.values() {
-        println!("--- {}: {:?}", value.id, value.adjacencias);
-    }
+            println!("2.2 Resetando o estado dos nos");
+            graph.restaurar_nos();
 
-    //println!("3 - Resetando o estado dos nos");
-    //graph.restaurar_nos();
+            println!("2.3 Encontrando o menor caminho com o BFS");
+            graph.bfs(indice_inicial)
+        }
 
-    //println!("4 - Explorando o labirinto (RAM) com o BFS");
-    //let indice_final = graph.bfs(indice_inicial);
+        Strategy::DFS => {
+            println!("2 - Explorando o labirinto ate o alvo com o DFS");
+            graph.dfs_alvo(&mut api, indice_inicial, -1, true);
+            println!(""); // Nova linha após chamadas recursivas
+            graph.indice_final.unwrap()
+        }
 
-    let indice_final = graph.indice_final.unwrap();
+        Strategy::IDDFS => {
+            println!("2 - Explorando o labirinto ate o alvo com o IDDFS");
+            let aux = graph.iddfs(&mut api, indice_inicial);
+            println!(""); // Nova linha após chamadas recursivas
+            aux
+        }
+    };
 
-    println!("5 - Encontrando o menor caminho");
+    println!("--- Vertices explorados: {}", graph.vertices.values().len());
+
+    println!("3 - Gerando a lista com o caminho encontrado");
     let menor_caminho = graph.encontrar_caminho(indice_final);
     println!("--- {:?}", menor_caminho);
 
-    println!("6 - Validando o menor caminho encontrado");
+    println!("4 - Validando o caminho encontrado");
     api.validar_caminho(menor_caminho);
 
     timer.parar();
 
-    println!("7 - Estatisticas finais");
+    println!("5 - Estatisticas finais");
     println!("--- API Calls: {}", api.n_calls);
     println!("--- Tempo total do programa  : {:.3}", timer.total());
     println!("--- Tempo total das API Calls: {:.3}", api.timer.total());

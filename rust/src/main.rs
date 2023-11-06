@@ -3,23 +3,29 @@ pub mod vertice;
 pub mod solver;
 pub mod graph;
 pub mod timer;
+pub mod strategy;
+
+use crate::strategy::Strategy;
 
 fn main() {
     let mut address: Option<String> = None;
     let mut maze: Option<String> = None;
+    let mut strat: Strategy = Strategy::BFS;
 
     let args: Vec<_> = std::env::args().collect();
     let mut i = 0;
 
     while i < args.len() {
         match args[i].as_str() {
-            "--url" => {
-                address = Some(args[i + 1].clone());
-            }
+            "--url" => address = Some(args[i + 1].clone()),
 
-            "--maze" => {
-                maze = Some(args[i + 1].clone());
-            }
+            "--maze" => maze = Some(args[i + 1].clone()),
+
+            "--bfs" => strat = Strategy::BFS,
+
+            "--dfs" => strat = Strategy::DFS,
+
+            "--iddfs" => strat = Strategy::IDDFS,
 
             "--help" => {
                 println!("Usage: main.py [OPTION] [ARG]\n");
@@ -41,5 +47,5 @@ fn main() {
         i += 1;
     }
 
-    solver::solver(address, maze);
+    solver::solver(address, maze, strat);
 }

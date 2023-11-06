@@ -27,7 +27,7 @@ struct RValidarCaminho {
 pub struct API {
     client: Client,
     pub n_calls: i32,
-    api: String,
+    pub api: String,
     pub maze: String,
     pub timer: Timer
 }
@@ -157,49 +157,4 @@ impl API {
             println!("--- Caminho valido : {}", validacao.caminho_valido);
         }
     }
-}
-
-pub fn _rest_call() {
-    //let point = Point { x: 1, y: 2 };
-
-    // Convert the Point to a JSON string.
-    //let serialized = serde_json::to_string(&point).unwrap();
-
-    // Prints serialized = {"x":1,"y":2}
-    //println!("serialized = {}", serialized);
-
-    // Convert the JSON string back to a Point.
-    //let deserialized: Point = serde_json::from_str(&serialized).unwrap();
-
-    // Prints deserialized = Point { x: 1, y: 2 }
-    //println!("deserialized = {:?}", deserialized);
-
-    //let body = reqwest::blocking::get("https://gtm.delary.dev/labirintos").unwrap();
-    //println!("body = {:?}", body);
-
-    let client = reqwest::blocking::Client::new();
-    let body = client
-        .get("https://gtm.delary.dev/labirintos")
-        .send()
-        .unwrap();
-
-    match body.text() {
-        Ok(text) => println!("body = {:?}", text),
-        Err(_) => unimplemented!(),
-    }
-
-    let map = json!({
-        "id": "grupo_i",
-        "labirinto": "sample-maze"
-    });
-    let res = client
-        .post("https://gtm.delary.dev/iniciar")
-        .json(&map)
-        .send()
-        .unwrap();
-
-    //println!("pos = {:?}", res.text());
-
-    let pos: RMovimentar = res.json().unwrap();
-    println!("pos = {:?}", pos);
 }
