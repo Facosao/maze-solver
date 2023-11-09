@@ -180,7 +180,7 @@ impl Graph {
             return;
         }
         
-        Self::dfs_status(api, indice);
+        //Self::dfs_status(api, indice);
 
         if inicio == false {
             //println!("M {}", indice);
@@ -190,6 +190,8 @@ impl Graph {
         //}
 
         self.vertices.get_mut(&indice).unwrap().explorado = true;
+        self.vertices.get_mut(&indice).unwrap().depth = depth;
+        self.vertices.get_mut(&indice).unwrap().anterior = anterior;
 
         let no = self.vertices[&indice].clone();
 
@@ -206,7 +208,7 @@ impl Graph {
                     }
     
                     Some(no_adj) => {
-                        if no_adj.explorado == false {
+                        if (no_adj.explorado == false) || (no_adj.depth <= depth) {
                             self.dfs_depth(api, *adj, indice, depth - 1, false);
                         }
                     }
@@ -227,7 +229,7 @@ impl Graph {
 
     // DFS com aprofundamento iterativo.
     pub fn iddfs(&mut self, api: &mut API, indice_inicial: i32) -> i32 {
-        let mut i: i32 = 3;
+        let mut i: i32 = 0;
 
         loop {
             self.dfs_depth(api, indice_inicial, -1, i, true);
