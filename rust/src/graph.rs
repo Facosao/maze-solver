@@ -180,7 +180,7 @@ impl Graph {
             return;
         }
         
-        //Self::dfs_status(api, indice);
+        Self::dfs_status(api, indice);
 
         if inicio == false {
             //println!("M {}", indice);
@@ -224,7 +224,7 @@ impl Graph {
             api.movimentar(&mut self.vertices, no.anterior, indice);
         }
 
-        //Self::dfs_status(api, indice);        
+        Self::dfs_status(api, indice);        
     }
 
     // DFS com aprofundamento iterativo.
