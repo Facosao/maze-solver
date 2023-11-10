@@ -82,10 +82,10 @@ def BFS(nodes: list[Node], root: Node):
             if node.explored is False:
                 node.previous = v
                 node.explored = True
-                #queue.extend(node.find_path())
+                # queue.extend(node.find_path())
 
                 if has_child is False:
-                    # queue.extend(node.find_path())
+                    queue.extend(node.previous.find_path())
                     has_child = True
 
                 queue.append(node.id)
@@ -97,7 +97,9 @@ def BFS(nodes: list[Node], root: Node):
             # queue.extend(walk_back)
             if v.previous is not None:
                 queue.append(v.previous.id)
-        
+        else:
+            queue.append(v.id)
+
         start = False
 
 

@@ -41,7 +41,7 @@ impl Graph {
     }
 
     // Usado apenas com todos os nós na memória
-    pub fn bfs(&mut self, raiz: i32) -> i32 {
+    pub fn bfs_total(&mut self, raiz: i32) -> i32 {
         self.vertices.get_mut(&raiz).unwrap().explorado = true;
 
         let mut fila: Vec<i32> = Vec::new();
@@ -59,6 +59,41 @@ impl Graph {
 
             for adj in no.adjacencias {
                 let no_adj = self.vertices.get_mut(&adj).unwrap();
+
+                if no_adj.explorado == false {
+                    no_adj.explorado = true;
+                    no_adj.anterior = no.id;
+                    fila.push(no_adj.id);
+                }
+            }
+        }
+
+        return -1; // Inalcançável
+    }
+
+    pub fn bfs_parcial(&mut self, raiz: i32) -> i32 {
+        self.vertices.get_mut(&raiz).unwrap().explorado = true;
+
+        let mut fila: Vec<i32> = Vec::new();
+        fila.push(self.vertices.get(&raiz).unwrap().id);
+
+        while fila.len() > 0 {
+            let no = self.vertices
+                .get(&fila.remove(0))
+                .unwrap()
+                .clone();
+
+            if no.fim == true {
+                return no.id; 
+            }
+
+            for adj in no.adjacencias {
+                let no_adj: &mut Vertice;
+
+                match self.vertices.get_mut(&adj) {
+                    Some(vert) => no_adj = vert,
+                    None => continue,
+                }
 
                 if no_adj.explorado == false {
                     no_adj.explorado = true;

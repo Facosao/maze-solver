@@ -10,7 +10,7 @@ use crate::strategy::Strategy;
 fn main() {
     let mut address: Option<String> = None;
     let mut maze: Option<String> = None;
-    let mut strat: Strategy = Strategy::BFS;
+    let mut strat: Strategy = Strategy::DFSeBFSTotal;
 
     let args: Vec<_> = std::env::args().collect();
     let mut i = 0;
@@ -21,8 +21,10 @@ fn main() {
 
             "--maze" => maze = Some(args[i + 1].clone()),
 
-            "--bfs" => strat = Strategy::BFS,
+            "--bfstotal" => strat = Strategy::DFSeBFSTotal,
 
+            "--bfsparcial" => strat = Strategy::DFSeBFSParcial,
+            
             "--dfs" => strat = Strategy::DFS,
 
             "--iddfs" => strat = Strategy::IDDFS,

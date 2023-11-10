@@ -12,7 +12,7 @@ pub fn solver(address: Option<String>, maze: Option<String>, strat: Strategy) {
     let indice_inicial = api.iniciar(&mut graph.vertices).unwrap();
 
     let indice_final: i32 = match strat {
-        Strategy::BFS => {
+        Strategy::DFSeBFSTotal => {
             println!("2.1 Explorando todo o labirinto com o DFS");
             graph.dfs_total(&mut api, indice_inicial, -1, true); 
             println!(""); // Nova linha após chamadas recursivas
@@ -20,8 +20,20 @@ pub fn solver(address: Option<String>, maze: Option<String>, strat: Strategy) {
             println!("2.2 Resetando o estado dos nos");
             graph.restaurar_nos();
 
-            println!("2.3 Encontrando o menor caminho com o BFS");
-            graph.bfs(indice_inicial)
+            println!("2.3 Encontrando o menor caminho com o BFS total");
+            graph.bfs_total(indice_inicial)
+        }
+
+        Strategy::DFSeBFSParcial => {
+            println!("2.1 Explorando o labirinto ate o alvo com o DFS");
+            graph.dfs_alvo(&mut api, indice_inicial, -1, true);
+            println!(""); // Nova linha após chamadas recursivas
+            
+            println!("2.2 Resetando o estado dos nos");
+            graph.restaurar_nos();
+
+            println!("2.3 Encontrando o menor caminho com o BFS parcial");
+            graph.bfs_parcial(indice_inicial)
         }
 
         Strategy::DFS => {
