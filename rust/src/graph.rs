@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::vertice::Vertice;
 use crate::api::API;
@@ -40,38 +40,8 @@ impl Graph {
         self.vertices.insert(indice_inicial, vertice_inicial);
     }
 
-    // Usado apenas com todos os nós na memória
-    pub fn bfs_total(&mut self, raiz: i32) -> i32 {
-        self.vertices.get_mut(&raiz).unwrap().explorado = true;
-
-        let mut fila: Vec<i32> = Vec::new();
-        fila.push(self.vertices.get(&raiz).unwrap().id);
-
-        while fila.len() > 0 {
-            let no = self.vertices
-                .get(&fila.remove(0))
-                .unwrap()
-                .clone();
-
-            if no.fim == true {
-                return no.id; 
-            }
-
-            for adj in no.adjacencias {
-                let no_adj = self.vertices.get_mut(&adj).unwrap();
-
-                if no_adj.explorado == false {
-                    no_adj.explorado = true;
-                    no_adj.anterior = no.id;
-                    fila.push(no_adj.id);
-                }
-            }
-        }
-
-        return -1; // Inalcançável
-    }
-
-    pub fn bfs_parcial(&mut self, raiz: i32) -> i32 {
+    // Sem chamadas de API
+    pub fn bfs_ram(&mut self, raiz: i32) -> i32 {
         self.vertices.get_mut(&raiz).unwrap().explorado = true;
 
         let mut fila: Vec<i32> = Vec::new();
@@ -154,9 +124,6 @@ impl Graph {
             }
         }
 
-        // Redundante?
-        // let no = self.vertices.get(&indice).unwrap().clone();
-
         if no.inicio == false {
             api.movimentar(&mut self.vertices, no.anterior, indice);
         }
@@ -198,9 +165,6 @@ impl Graph {
                 }
             }
         }
-
-        // Redundante?
-        // let no = self.vertices.get(&indice).unwrap().clone();
 
         if (no.inicio == false) && (self.indice_final.is_none()) {
             api.movimentar(&mut self.vertices, no.anterior, indice);
@@ -276,6 +240,129 @@ impl Graph {
                 i += 1;
             }
         }
+    }
+
+    // Explora o grafo com BFS
+    // TODO: Rewrite this to use two states
+    pub fn bfs_explorer(&mut self, api: &mut API, indice_inicial: i32) -> i32 {
+        let mut fila: Vec<i32> = Vec::new();
+        let mut start = true;
+        let mut current_node: i32 = indice_inicial;
+        let mut anterior: i32;
+
+        self.vertices.get_mut(&indice_inicial).unwrap().explorado = true;
+        fila.push(indice_inicial);
+
+        while !fila.is_empty() {
+            anterior = current_node;
+            let v = fila.remove(0);
+
+            if start == false {
+                if current_node == v {
+                    continue;
+                } else {
+                    if !self.vertices[&current_node].adjacencias.contains(&v) {
+                        let mut path_to_node = self.bfs_restricted(current_node, v);
+                        path_to_node.extend_from_slice(&fila);
+                        fila = path_to_node;
+                        continue;
+                    } else {
+                        //println!("M: {}", v);
+                        api.movimentar(&mut self.vertices, v, anterior);
+                        //self.vertices.get_mut(&v).unwrap().explorado = true;
+                    }
+                }
+            }
+
+            current_node = v;
+
+            let vert = self.vertices[&v].clone();
+
+            if vert.fim == true {
+                return v;
+            }
+
+            for vertice in vert.adjacencias {
+                if !self.vertices.contains_key(&vertice) {
+                    // Insert incomplete vertex
+                    self.vertices.insert(vertice, Vertice::novo(vertice, vert.id));
+                }
+
+                let vert_adj = self.vertices
+                    .get_mut(&vertice)
+                    .unwrap();
+
+                if vert_adj.explorado == false {
+                    vert_adj.explorado = true;
+                    vert_adj.anterior = vert.id;
+                    //previous.insert(vertice, vert.id);
+                    fila.push(vertice);
+                }
+            }
+
+            start = false;
+        }
+        
+        return -1;
+    }
+
+    // Used with a broken graph to find a path
+    fn bfs_restricted(&mut self, start: i32, end: i32) -> Vec<i32> {
+        //println!("HashMap: {:?}", self.vertices.keys());
+        //println!("S: {} E: {}", start, end);
+        let mut previous: HashMap<i32,i32> = HashMap::new();
+        let mut visited: HashSet<i32> = HashSet::new();
+        let mut queue: Vec<i32> = Vec::new();
+
+        visited.insert(start);
+        previous.insert(start, -1);
+        queue.push(start);
+
+        while !queue.is_empty() {
+            let v = queue.remove(0);
+            //print!("v = {}", v);
+
+            // Possibly skip through unavailable vertices?
+
+            let vert: Vertice;
+
+            match self.vertices.get(&v) {
+                Some(vertex) => vert = vertex.clone(),
+                None => continue,
+            }
+
+            //println!(", adj = {:?}", vert.adjacencias);
+
+            for vertex in vert.adjacencias {
+                if !visited.contains(&vertex) {
+                    visited.insert(vertex);
+                    previous.insert(vertex, v);
+                    queue.push(vertex);
+                }
+
+                if vertex == end {
+                    // Generate path to return
+                    let mut path: Vec<i32> = Vec::new();
+                    let mut aux = vertex;
+                    
+                    loop {
+                        //println!("aux = {}", aux);
+                        path.push(aux);
+                        if previous[&aux] != -1 {
+                            aux = previous[&aux];      
+                        } else {
+                            break;
+                        }
+                    }
+
+                    path.reverse();
+                    //println!("S: {} E: {} L: {:?}", start, end, path);
+                    return path;
+                }
+            }
+        }
+
+        return queue;
     }
 
 }

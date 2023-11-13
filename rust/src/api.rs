@@ -27,7 +27,7 @@ struct RValidarCaminho {
 pub struct API {
     client: Client,
     pub n_calls: i32,
-    pub api: String,
+    pub url: String,
     pub maze: String,
     pub timer: Timer
 }
@@ -55,7 +55,7 @@ impl API {
         API{
             client: novo_client,
             n_calls: 0,
-            api: address.to_string(),
+            url: address.to_string(),
             maze: maze_id.to_string(),
             timer: Timer::novo()
         }
@@ -69,20 +69,33 @@ impl API {
         } else {
             let pos: RMovimentar = resp.json().unwrap();
 
-            if vertices.contains_key(&pos.pos_atual) {
-                return None;
-            } else {
-                let mut novo_vertice = Vertice::novo(pos.pos_atual, anterior);
-                novo_vertice.inicio = pos.inicio;
-                novo_vertice.fim = pos.r#final;
+            match vertices.get_mut(&pos.pos_atual) {
+                Some(vertice) => {
+                    if vertice.fetch == false {
+                        vertice.fetch = true;
+                        vertice.inicio = pos.inicio;
+                        vertice.fim = pos.r#final;
 
-                for item in pos.movimentos.iter() {
-                    novo_vertice.adjacencias.push(*item);
+                        for item in pos.movimentos.iter() {
+                            vertice.adjacencias.push(*item);
+                        }
+                    }
+
+                    return None;
                 }
+                None => {
+                    let mut novo_vertice = Vertice::novo(pos.pos_atual, anterior);
+                    novo_vertice.inicio = pos.inicio;
+                    novo_vertice.fim = pos.r#final;
 
-                vertices.insert(novo_vertice.id, novo_vertice);
+                    for item in pos.movimentos.iter() {
+                        novo_vertice.adjacencias.push(*item);
+                    }
 
-                return Some(pos.pos_atual);
+                    vertices.insert(novo_vertice.id, novo_vertice);
+
+                    return Some(pos.pos_atual);
+                }
             }
         }
     }
@@ -96,7 +109,7 @@ impl API {
         self.timer.iniciar();
 
         let response = self.client
-            .post(format!("{}/iniciar", self.api))
+            .post(format!("{}/iniciar", self.url))
             .json(&dados)
             .send()
             .unwrap();
@@ -107,7 +120,7 @@ impl API {
         return self.gravar_no(vertices, response, -1);
     }
 
-    pub fn movimentar(&mut self, vertices: &mut HashMap<i32, Vertice>, indice: i32, anterior: i32) -> Option<i32> {
+    pub fn movimentar(&mut self, vertices: &mut HashMap<i32, Vertice>, indice: i32, anterior: i32) {
         let dados = json!({
             "id": ID,
             "labirinto": self.maze,
@@ -118,7 +131,7 @@ impl API {
         self.timer.iniciar();
 
         let response = self.client
-            .post(format!("{}/movimentar", self.api))
+            .post(format!("{}/movimentar", self.url))
             .json(&dados)
             .send()
             .unwrap();
@@ -126,7 +139,7 @@ impl API {
         self.timer.parar();
         self.n_calls += 1;
 
-        return self.gravar_no(vertices, response, anterior);
+        self.gravar_no(vertices, response, anterior);
     }
 
     pub fn validar_caminho(&mut self, caminho: Vec<i32>) {
@@ -139,7 +152,7 @@ impl API {
         self.timer.iniciar();
 
         let response = self.client
-            .post(format!("{}/validar_caminho", self.api))
+            .post(format!("{}/validar_caminho", self.url))
             .json(&dados)
             .send()
             .unwrap();

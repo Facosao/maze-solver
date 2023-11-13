@@ -8,11 +8,11 @@ pub fn solver(address: Option<String>, maze: Option<String>, strat: Strategy) {
     let mut api = API::novo(address, maze);
     let mut graph = Graph::novo();
     
-    println!("1 - Fazendo chamada inicial (URL: {} | Labirinto: {} | Modo: {:?})", api.api, api.maze, strat);
+    println!("1 - Fazendo chamada inicial (URL: {} | Labirinto: {} | Modo: {:?})", api.url, api.maze, strat);
     let indice_inicial = api.iniciar(&mut graph.vertices).unwrap();
 
     let indice_final: i32 = match strat {
-        Strategy::DFSeBFSTotal => {
+        Strategy::DFSBFSTotal => {
             println!("2.1 Explorando todo o labirinto com o DFS");
             graph.dfs_total(&mut api, indice_inicial, -1, true); 
             println!(""); // Nova linha após chamadas recursivas
@@ -21,10 +21,10 @@ pub fn solver(address: Option<String>, maze: Option<String>, strat: Strategy) {
             graph.restaurar_nos();
 
             println!("2.3 Encontrando o menor caminho com o BFS total");
-            graph.bfs_total(indice_inicial)
+            graph.bfs_ram(indice_inicial)
         }
 
-        Strategy::DFSeBFSParcial => {
+        Strategy::DFSBFSParcial => {
             println!("2.1 Explorando o labirinto ate o alvo com o DFS");
             graph.dfs_alvo(&mut api, indice_inicial, -1, true);
             println!(""); // Nova linha após chamadas recursivas
@@ -33,7 +33,7 @@ pub fn solver(address: Option<String>, maze: Option<String>, strat: Strategy) {
             graph.restaurar_nos();
 
             println!("2.3 Encontrando o menor caminho com o BFS parcial");
-            graph.bfs_parcial(indice_inicial)
+            graph.bfs_ram(indice_inicial)
         }
 
         Strategy::DFS => {
@@ -47,6 +47,13 @@ pub fn solver(address: Option<String>, maze: Option<String>, strat: Strategy) {
             println!("2 - Explorando o labirinto ate o alvo com o IDDFS");
             let aux = graph.iddfs(&mut api, indice_inicial);
             println!(""); // Nova linha após chamadas recursivas
+            aux
+        }
+
+        Strategy::DBFS => {
+            println!("2 - Explorando o labirinto ate o alvo com o BFS");
+            let aux = graph.bfs_explorer(&mut api, indice_inicial);
+            println!("");
             aux
         }
     };

@@ -4,6 +4,7 @@ pub struct Vertice {
     pub anterior: i32,
     pub depth: i32,
     pub explorado: bool,
+    pub fetch: bool,
     pub adjacencias: Vec<i32>,
     pub inicio: bool,
     pub fim: bool,
@@ -16,6 +17,7 @@ impl Vertice {
             anterior: anterior,
             depth: 0,
             explorado: false,
+            fetch: false,
             adjacencias: Vec::new(),
             inicio: false,
             fim: false

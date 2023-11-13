@@ -1,7 +1,8 @@
 #[derive(Debug)]
 pub enum Strategy {
-    DFSeBFSTotal,
+    DFSBFSTotal,
     DFS,
-    DFSeBFSParcial,
+    DFSBFSParcial,
     IDDFS,
+    DBFS,
 }
