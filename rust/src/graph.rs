@@ -257,17 +257,19 @@ impl Graph {
             anterior = current_node;
             let v = fila.remove(0);
 
-            if (current_node == v) || (start == true) {    
-                continue;
-            } else {
-                if !self.vertices[&current_node].adjacencias.contains(&v) {
-                    let mut path_to_node = self.bfs_restricted(current_node, v);
-                    path_to_node.extend_from_slice(&fila);
-                    fila = path_to_node;
+            if start == false {
+                if current_node == v {    
                     continue;
                 } else {
-                    api.movimentar(&mut self.vertices, v, anterior);
-                    current_node = v;
+                    if !self.vertices[&current_node].adjacencias.contains(&v) {
+                        let mut path_to_node = self.bfs_restricted(current_node, v);
+                        path_to_node.extend_from_slice(&fila);
+                        fila = path_to_node;
+                        continue;
+                    } else {
+                        api.movimentar(&mut self.vertices, v, anterior);
+                        current_node = v;
+                    }
                 }
             }
 
