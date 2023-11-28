@@ -44,7 +44,7 @@ impl API {
 
         match maze {
             Some(id) => maze_id = id,
-            None => maze_id = "maze-sample".to_string(),
+            None => panic!("Nenhum labirinto selecionado!"),
         }
 
         let novo_client = reqwest::blocking::ClientBuilder::new()
@@ -100,16 +100,34 @@ impl API {
         }
     }
 
-    pub fn iniciar(&mut self, vertices: &mut HashMap<i32, Vertice>) -> Option<i32> {
-        let dados = json!({
-            "id": ID,
-            "labirinto": self.maze
-        });
+    pub fn iniciar(&mut self, vertices: &mut HashMap<i32, Vertice>, custom_end: Option<i32>) -> Option<i32> {
+
+        let dados;
+        let iniciar_str;
+
+        match custom_end {
+            None => {
+                dados = json!({
+                    "id": ID,
+                    "labirinto": self.maze
+                });
+                iniciar_str = "/iniciar";
+            }
+
+            Some(end) => {
+                dados = json!({
+                    "id": ID,
+                    "labirinto": self.maze,
+                    "pos_final": end
+                });
+                iniciar_str = "/iniciar_custom";
+            }
+        }
 
         self.timer.iniciar();
 
         let response = self.client
-            .post(format!("{}/iniciar", self.url))
+            .post(format!("{}{}", self.url, iniciar_str))
             .json(&dados)
             .send()
             .unwrap();
