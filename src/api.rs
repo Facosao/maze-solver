@@ -44,7 +44,7 @@ impl API {
 
         match maze {
             Some(id) => maze_id = id,
-            None => panic!("Nenhum labirinto selecionado!"),
+            None => panic!("No maze selected!"),
         }
 
         let novo_client = reqwest::blocking::ClientBuilder::new()
@@ -57,15 +57,15 @@ impl API {
             n_calls: 0,
             url: address.to_string(),
             maze: maze_id.to_string(),
-            timer: Timer::novo()
+            timer: Timer::new()
         }
     }
 
-    fn gravar_no(&self, vertices: &mut HashMap<i32, Vertice>, resp: Response, anterior: i32) -> Option<i32> {
+    fn store_node(&self, vertices: &mut HashMap<i32, Vertice>, resp: Response, anterior: i32) -> Option<i32> {
         if resp.status().as_u16() != 200 {
-            println!("\nErro: {:?}", resp.status().as_u16());
+            println!("\nError: {:?}", resp.status().as_u16());
             println!("{:?}", resp.text());
-            panic!("Erro durante a gravacao do no!");
+            panic!("Failed to store node!");
         } else {
             let pos: RMovimentar = resp.json().unwrap();
 
@@ -100,7 +100,7 @@ impl API {
         }
     }
 
-    pub fn iniciar(&mut self, vertices: &mut HashMap<i32, Vertice>, custom_end: Option<i32>) -> Option<i32> {
+    pub fn start(&mut self, vertices: &mut HashMap<i32, Vertice>, custom_end: Option<i32>) -> Option<i32> {
 
         let dados;
         let iniciar_str;
@@ -124,7 +124,7 @@ impl API {
             }
         }
 
-        self.timer.iniciar();
+        self.timer.start();
 
         let response = self.client
             .post(format!("{}{}", self.url, iniciar_str))
@@ -132,13 +132,13 @@ impl API {
             .send()
             .unwrap();
 
-        self.timer.parar();
+        self.timer.stop();
         self.n_calls += 1;
 
-        return self.gravar_no(vertices, response, -1);
+        return self.store_node(vertices, response, -1);
     }
 
-    pub fn movimentar(&mut self, vertices: &mut HashMap<i32, Vertice>, indice: i32, anterior: i32) {
+    pub fn move_to(&mut self, vertices: &mut HashMap<i32, Vertice>, indice: i32, anterior: i32) {
         let dados = json!({
             "id": ID,
             "labirinto": self.maze,
@@ -146,7 +146,7 @@ impl API {
         });
 
         //println!("{}", serde_json::to_string_pretty(&dados).unwrap());
-        self.timer.iniciar();
+        self.timer.start();
 
         let response = self.client
             .post(format!("{}/movimentar", self.url))
@@ -154,20 +154,20 @@ impl API {
             .send()
             .unwrap();
 
-        self.timer.parar();
+        self.timer.stop();
         self.n_calls += 1;
 
-        self.gravar_no(vertices, response, anterior);
+        self.store_node(vertices, response, anterior);
     }
 
-    pub fn validar_caminho(&mut self, caminho: Vec<i32>) {
+    pub fn validate_path(&mut self, caminho: Vec<i32>) {
         let dados = json!({
             "id": ID,
             "labirinto": self.maze,
             "todos_movimentos": caminho
         });
 
-        self.timer.iniciar();
+        self.timer.start();
 
         let response = self.client
             .post(format!("{}/validar_caminho", self.url))
@@ -175,17 +175,17 @@ impl API {
             .send()
             .unwrap();
 
-        self.timer.parar();
+        self.timer.stop();
         self.n_calls += 1;
 
         if response.status().as_u16() != 200 {
-            println!("\nErro: {:?}", response.status().as_u16());
+            println!("\nError: {:?}", response.status().as_u16());
             println!("{:?}", response.text());
-            panic!("Erro durante a validacao do caminho!");
+            panic!("Failed to validate path!");
         } else {
             let validacao: RValidarCaminho = response.json().unwrap();
-            println!("--- Qtd. movimentos: {}", validacao.quantidade_movimentos);
-            println!("--- Caminho valido : {}", validacao.caminho_valido);
+            println!("--- Movement count: {}", validacao.quantidade_movimentos);
+            println!("--- Valid path : {}", validacao.caminho_valido);
         }
     }
 }

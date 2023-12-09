@@ -1,4 +1,6 @@
 pub mod api;
+pub mod dfs;
+pub mod bfs;
 pub mod vertice;
 pub mod solver;
 pub mod graph;
@@ -50,15 +52,13 @@ fn main() {
 
             "--custom" => custom_end = Some(args[i + 1].clone().parse().unwrap()),
 
-            "--bfstotal" => strat = Some(Strategy::DFSBFSTotal),
+            "--dfsfullbfs" => strat = Some(Strategy::DFSFullBFS),
 
-            "--bfsparcial" => strat = Some(Strategy::DFSBFSParcial),
+            "--dfsexitbfs" => strat = Some(Strategy::DFSExitBFS),
             
             "--dfs" => strat = Some(Strategy::DFS),
 
-            "--iddfs" => strat = Some(Strategy::IDDFS),
-
-            "--dbfs" => strat = Some(Strategy::DBFS),
+            "--bfs" => strat = Some(Strategy::BFS),
 
             "--help" => {
                 print_help();

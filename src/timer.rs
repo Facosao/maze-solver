@@ -6,18 +6,18 @@ pub struct Timer {
 }
 
 impl Timer {
-    pub fn novo() -> Self {
+    pub fn new() -> Self {
         Timer {
             total: Duration::new(0, 0),
             aux: Instant::now()
         }
     }
 
-    pub fn iniciar(&mut self) {
+    pub fn start(&mut self) {
         self.aux = Instant::now();
     }
 
-    pub fn parar(&mut self) {
+    pub fn stop(&mut self) {
         self.total += self.aux.elapsed();
     }
 
