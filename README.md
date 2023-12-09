@@ -11,7 +11,7 @@ Para obter o programa, você pode compilar o código do mesmo ou usar o release 
     - [abordagem] : Define qual abordagem será usada pelo programa para explorar o labirinto e encontrar um caminho. Opções disponíveis:
         - --dfs : Usa o DFS para explorar o labirinto até a saída e usa o caminho encontrado por este algoritmo.
         - --dbfs : Usa o BFS para explorar o labirinto até a saída e usa o caminho encontrado por este algoritmo.
-        - --bfstotal: Usa o DFS para explorar todo labirinto e depois usa o BFS nos vértices armazenados na memória para encontrar o caminho mais curto.
+        - --bfstotal: Usa o DFS para explorar todo o labirinto e depois usa o BFS nos vértices armazenados na memória para encontrar o caminho mais curto.
         - --bfsparcial: Usa o DFS para explorar o labirinto até a saída e depois usa o BFS nos vértices armazenados na memória para encontrar um caminho melhor que o caminho do DFS.
 
 - Argumentos opcionais:
